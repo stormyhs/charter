@@ -56,14 +56,14 @@
         <div style="margin-top: 70px;"></div>
 
         <h3><span class="verb green">POST</span> /chart/[name]</h3>
-        <p>Adds the given <span class="code">SeriesData</span> to the chart.</p>
+        <p>Adds the given <span class="code">SeriesData</span> to the chart. Timestamp must be higher than previous point.</p>
         <h3>Body</h3>
         <p><span class="code">SeriesData</span></p>
 
         <div style="margin-top: 70px;"></div>
 
         <h3><span class="verb orange">PUT</span> /chart/[name]</h3>
-        <p>Sets the chart's data points to the given <span class="code">SeriesData[]</span> array.</p>
+        <p>Sets the chart's data points to the given <span class="code">SeriesData[]</span> array. Timestamps must be sorted.</p>
         <h3>Body</h3>
         <p><span class="code">SeriesData[]</span></p>
 
@@ -147,7 +147,7 @@
         <p>Represents a single data point on a chart.</p>
         <pre>
 interface SeriesData &lbrace;
-    time: number;
+    time: number; // Unix timestamp
     value: number;
 &rbrace;
         </pre>
