@@ -42,6 +42,7 @@
             primaryChartApi.applyOptions(chartOptions);
             secondaryChartApi.applyOptions(chartOptions);
             tertiaryChartApi.applyOptions(chartOptions);
+
         }
 
         if (primaryLineSeries && secondaryLineSeries && tertiaryLineSeries) {
@@ -100,6 +101,37 @@
             secondaryLineSeries.setMarkers(data);
         } else if(chart === 'tertiary' && tertiaryLineSeries) {
             tertiaryLineSeries.setMarkers(data);
+        }
+    }
+
+    function screenshot(chart: string) {
+        let screenshot: HTMLCanvasElement | null = null;
+        if(chart == "primary" && primaryChartApi) {
+            screenshot = primaryChartApi.takeScreenshot()
+        } else if(chart == "secondary" && secondaryChartApi) {
+            screenshot = secondaryChartApi.takeScreenshot()
+        } else if(chart == "tertiary" && tertiaryChartApi) {
+            screenshot = tertiaryChartApi.takeScreenshot()
+        }
+        if(screenshot) {
+            screenshot.toBlob((blob: any) => {
+                const url = URL.createObjectURL(blob);
+                window.open(url, '_blank');
+            });
+        }
+    }
+
+    function autoScale(chart: string) {
+        if(chart === "all" && primaryChartApi && secondaryChartApi && tertiaryChartApi) {
+            primaryChartApi.timeScale().fitContent();
+            secondaryChartApi.timeScale().fitContent();
+            tertiaryChartApi.timeScale().fitContent();
+        } else if(chart === "primary" && primaryChartApi) {
+            primaryChartApi.timeScale().fitContent();
+        } else if(chart === "secondary" && secondaryChartApi) {
+            secondaryChartApi.timeScale().fitContent();
+        } else if(chart === "tertiary" && tertiaryChartApi) {
+            tertiaryChartApi.timeScale().fitContent();
         }
     }
 
@@ -162,7 +194,18 @@
             />
             </Chart>
 
-            <div style="height: 25px;"></div>
+            <button
+                on:click={() => autoScale("primary")}
+                style="padding: 4px; background-color: #22242c; color: white; border: none; cursor: pointer;"
+            >
+                Fit Scale
+            </button>
+            <button
+                on:click={() => screenshot("primary")}
+                style="padding: 10px; border-radius: 8px; background-color: #22242c; color: white; border: none; cursor: pointer;"
+            >
+                As Image
+            </button>
         </Container>
     </div>
 
@@ -177,6 +220,18 @@
                     ref={(ref) => secondaryLineSeries = ref}
                 />
                 </Chart>
+                <button
+                    on:click={() => autoScale("secondary")}
+                    style="padding: 4px; background-color: #22242c; color: white; border: none; cursor: pointer;"
+                >
+                    Fit Scale
+                </button>
+                <button
+                    on:click={() => screenshot("secondary")}
+                    style="padding: 10px; border-radius: 8px; background-color: #22242c; color: white; border: none; cursor: pointer;"
+                >
+                    As Image
+                </button>
             </Container>
         </div>
 
@@ -189,6 +244,18 @@
                     ref={(ref) => tertiaryLineSeries = ref}
                 />
                 </Chart>
+                <button
+                    on:click={() => autoScale("tertiary")}
+                    style="padding: 4px; background-color: #22242c; color: white; border: none; cursor: pointer;"
+                >
+                    Fit Scale
+                </button>
+                <button
+                    on:click={() => screenshot("tertiary")}
+                    style="padding: 10px; border-radius: 8px; background-color: #22242c; color: white; border: none; cursor: pointer;"
+                >
+                    As Image
+                </button>
             </Container>
         </div>
     </div>
