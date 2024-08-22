@@ -136,6 +136,12 @@
 
         <h3><span class="verb red">DELETE</span> /loadingbar</h3>
         <p>Clears the progress of the loading bar.</p>
+
+        <div style="margin-top: 70px;"></div>
+
+        <h3><span class="verb orange">PUT</span> /example</h3>
+        <p>Sets example data to all displays.</p>
+
     </Container>
 </div>
 
