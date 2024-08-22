@@ -1,0 +1,11 @@
+html {
+    background-color: #1a1a1a;
+    color: #fff;
+    font-family: Verdana;
+    font-size: 22px;
+}
+
+.center {
+    display: flex;
+    justify-content: center;
+}
