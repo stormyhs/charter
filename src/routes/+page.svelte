@@ -16,7 +16,7 @@
     import type { LineData, IChartApi, ISeriesApi, SeriesMarker, Time } from "lightweight-charts";
 
     import Container from '../components/Container.svelte';
-    import { chartOptions, lineSeriesOptions, watermark } from '../global';
+    import { chartOptions, lineSeriesOptions } from '../global';
     import LoadingBar from '../components/LoadingBar.svelte';
     
     let primaryChartApi: IChartApi | null = null;
