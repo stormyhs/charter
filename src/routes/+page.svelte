@@ -108,7 +108,6 @@
 
     function screenshot(chart: string) {
         let screenshot: HTMLCanvasElement | null = null;
-        const options = { watermark: { ...watermark, text: "Charter v0.1" } };
         if(chart == "primary" && primaryChartApi) {
             primaryChartApi.applyOptions({
                 watermark: {
