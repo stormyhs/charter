@@ -16,7 +16,7 @@
     import type { LineData, IChartApi, ISeriesApi, SeriesMarker, Time } from "lightweight-charts";
 
     import Container from '../components/Container.svelte';
-    import { chartOptions, lineSeriesOptions } from '../global';
+    import { chartOptions, lineSeriesOptions, watermark } from '../global';
     import LoadingBar from '../components/LoadingBar.svelte';
     
     let primaryChartApi: IChartApi | null = null;
@@ -42,13 +42,15 @@
             primaryChartApi.applyOptions(chartOptions);
             secondaryChartApi.applyOptions(chartOptions);
             tertiaryChartApi.applyOptions(chartOptions);
-
         }
 
         if (primaryLineSeries && secondaryLineSeries && tertiaryLineSeries) {
             primaryLineSeries.applyOptions(lineSeriesOptions);
             secondaryLineSeries.applyOptions(lineSeriesOptions);
             tertiaryLineSeries.applyOptions(lineSeriesOptions);
+
+            secondaryLineSeries.applyOptions({ color: 'green' });
+            tertiaryLineSeries.applyOptions({ color: 'red' });
         }
     }
 
@@ -106,13 +108,45 @@
 
     function screenshot(chart: string) {
         let screenshot: HTMLCanvasElement | null = null;
+        const options = { watermark: { ...watermark, text: "Charter v0.1" } };
         if(chart == "primary" && primaryChartApi) {
+            primaryChartApi.applyOptions({
+                watermark: {
+                    text: primaryTitle,
+                    color: 'teal',
+                    visible: true,
+                    vertAlign: "top",
+                    horzAlign: "left"
+                }
+            });
             screenshot = primaryChartApi.takeScreenshot()
+            primaryChartApi.applyOptions({ watermark: {visible: false } });
         } else if(chart == "secondary" && secondaryChartApi) {
+            secondaryChartApi.applyOptions({
+                watermark: {
+                    text: secondaryTitle,
+                    color: 'teal',
+                    visible: true,
+                    vertAlign: "top",
+                    horzAlign: "left"
+                }
+            });
             screenshot = secondaryChartApi.takeScreenshot()
+            secondaryChartApi.applyOptions({watermark: {visible: false}});
         } else if(chart == "tertiary" && tertiaryChartApi) {
+            tertiaryChartApi.applyOptions({
+                watermark: {
+                    text: tertiaryTitle,
+                    color: 'teal',
+                    visible: true,
+                    vertAlign: "top",
+                    horzAlign: "left"
+                }
+            });
             screenshot = tertiaryChartApi.takeScreenshot()
+            tertiaryChartApi.applyOptions({watermark: {visible: false}});
         }
+
         if(screenshot) {
             screenshot.toBlob((blob: any) => {
                 const url = URL.createObjectURL(blob);
@@ -139,7 +173,7 @@
         if (browser) {
             getData();
         }
-    }, 750);
+    }, 300);
 
     // Cleanup the loop when the component is destroyed
     onDestroy(() => {
@@ -184,27 +218,44 @@
 
 <div style="display: flex; justify-content: center; align-items: center;">
     <!-- Primary Chart -->
-    <div style="margin-left: 25px;">
-        <Container title={primaryTitle}>
-            <Chart container={{class: 'chart-container'}} width={1200} height={800} ref={(ref) => primaryChartApi = ref}>
-                <LineSeries
-                data={[]}
-                markers={[]}
-                ref={(ref) => primaryLineSeries = ref}
-            />
-            </Chart>
+    <div style="display: flex; flex-direction: column; gap: 25px; margin-left: 35px">
+        <div>
+            <Container title={primaryTitle}>
+                <Chart container={{class: 'chart-container'}} width={1200} height={800} ref={(ref) => primaryChartApi = ref}>
+                    <LineSeries
+                    data={[]}
+                    markers={[]}
+                    ref={(ref) => primaryLineSeries = ref}
+                />
+                </Chart>
 
+                <button
+                    on:click={() => autoScale("primary")}
+                    style="padding: 4px; background-color: #22242c; color: white; border: none; cursor: pointer;"
+                >
+                    Fit Scale
+                </button>
+                <button
+                    on:click={() => screenshot("primary")}
+                    style="padding: 10px; border-radius: 8px; background-color: #22242c; color: white; border: none; cursor: pointer;"
+                >
+                    As Image
+                </button>
+            </Container>
+        </div>
+        <Container style="display: flex; align-items: center; gap: 15px; width: inherit;">
+            <span>Looking for the API documentation? Click <a href="/docs">here</a>.</span>
             <button
-                on:click={() => autoScale("primary")}
-                style="padding: 4px; background-color: #22242c; color: white; border: none; cursor: pointer;"
-            >
-                Fit Scale
+                on:click={exampleData}
+                style="margin-left: auto; padding: 10px; border-radius: 8px; background-color: #22242c; color: white; border: none; cursor: pointer;"
+                >
+                Set Example Data
             </button>
             <button
-                on:click={() => screenshot("primary")}
+                on:click={clearData}
                 style="padding: 10px; border-radius: 8px; background-color: #22242c; color: white; border: none; cursor: pointer;"
-            >
-                As Image
+                >
+                Clear All Data
             </button>
         </Container>
     </div>
@@ -266,24 +317,9 @@
 <div style="height: 35px;"></div>
 
 <div class="center" style="gap: 25px">
-    <Container>
-        <p>Looking for the API documentation? Click <a href="/docs">here</a>.</p>
-    </Container>
 </div>
 
 <div style="height: 35px;"></div>
 
 <div class="center" style="gap: 35px">
-    <button
-        on:click={exampleData}
-        style="padding: 10px; border-radius: 8px; background-color: #22242c; color: white; border: none; cursor: pointer;"
-        >
-        Set Example Data
-    </button>
-    <button
-        on:click={clearData}
-        style="padding: 10px; border-radius: 8px; background-color: #22242c; color: white; border: none; cursor: pointer;"
-        >
-        Clear All Data
-    </button>
 </div>

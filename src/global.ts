@@ -1,4 +1,6 @@
-export const chartOptions = {
+import type { DeepPartial, ChartOptions } from 'lightweight-charts';
+
+export const chartOptions: DeepPartial<ChartOptions> = {
 	layout: {
 		background: {
 			color: '#171b26',
@@ -16,7 +18,7 @@ export const chartOptions = {
 	},
 	timeScale: {
 		timeVisible: true,
-	},
+	}
 }
 
 export const lineSeriesOptions = {
