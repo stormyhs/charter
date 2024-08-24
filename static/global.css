@@ -5,7 +5,30 @@ html {
     font-size: 22px;
 }
 
+/* Dark style input */
+input {
+    background-color: #333;
+    color: #fff;
+    border: 1px solid #333;
+    border-radius: 5px;
+    padding: 5px;
+}
+
 .center {
     display: flex;
     justify-content: center;
+}
+
+a {
+    color: lightblue;
+    text-decoration: none;
+}
+
+a:hover {
+    color: lightblue;
+    text-decoration: underline;
+}
+
+a:visited {
+    color: lightblue
 }

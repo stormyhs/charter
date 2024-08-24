@@ -37,6 +37,8 @@
 
     let loadingBar: number = 0;
 
+    let pollingRate: number = 300;
+
     $: {
         if (primaryChartApi && secondaryChartApi && tertiaryChartApi) {
             primaryChartApi.applyOptions(chartOptions);
@@ -172,12 +174,25 @@
         if (browser) {
             getData();
         }
-    }, 300);
+    }, pollingRate);
 
     // Cleanup the loop when the component is destroyed
     onDestroy(() => {
         clearInterval(loop);
     });
+
+    function setPollingRate() {
+        let newRate = parseInt((document.getElementById('polling-rate') as HTMLInputElement).value);
+
+        clearInterval(loop);
+        loop = setInterval(() => {
+            if (browser) {
+                getData();
+            }
+        }, newRate);
+
+        pollingRate = newRate;
+    }
 
     function clickTitle() {
         if (browser) {
@@ -243,7 +258,17 @@
             </Container>
         </div>
         <Container style="display: flex; align-items: center; gap: 15px; width: inherit;">
-            <span>Looking for the API documentation? Click <a href="/docs">here</a>.</span>
+            <span>API docs <a href="/docs">here</a>.</span>
+            <span>Polling rate (ms):
+                <input id="polling-rate" type="number" style="width: 75px;" value={pollingRate}/>
+                <button
+                    on:click={() => setPollingRate()}
+                    style="padding: 10px; border-radius: 8px; background-color: #22242c; color: white; border: none; cursor: pointer;"
+                    >
+                    Set
+                </button>
+            </span>
+
             <button
                 on:click={exampleData}
                 style="margin-left: auto; padding: 10px; border-radius: 8px; background-color: #22242c; color: white; border: none; cursor: pointer;"
