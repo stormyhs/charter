@@ -1,4 +1,3 @@
-
 <style>
 :global(.chart-container) {
     aspect-ratio: 16 / 9;
@@ -127,21 +126,16 @@
         localStorage.setItem('pollingRate', newRate.toString());
     }
 
-    function clickTitle() {
-        if (browser) {
-            window.open('https://github.com/stormyhs', '_blank');
-        }
-    }
-
     function clearData() {
         fetch('/reset', { method: 'delete' });
     }
 </script>
 
-<div style="display: flex; justify-content: center;">
-    <div on:click={clickTitle} style="display: flex; flex-direction: column; width: fit-content; cursor: pointer;">
+<div style="display: flex; justify-content: center; margin-top: 5px;">
+    <div style="display: flex; flex-direction: column; width: fit-content;">
         <h1 style="margin: 0; padding: 0">Charter v0.1</h1>
         <p style="margin: 0; padding: 0; text-align: center;">A charting web app</p>
+        <span>Made with ❤️ by <a href="https://github.com/stormyhs" target="_blank">stormyhs</a></span>
     </div>
 </div>
 
