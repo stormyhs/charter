@@ -39,6 +39,13 @@
 
     let pollingRate: number = 300;
 
+    if(browser) {
+        let storedPollingRate = localStorage.getItem('pollingRate');
+        if(storedPollingRate) {
+            pollingRate = parseInt(storedPollingRate);
+        }
+    }
+
     $: {
         if (primaryChartApi && secondaryChartApi && tertiaryChartApi) {
             primaryChartApi.applyOptions(chartOptions);
@@ -192,6 +199,8 @@
         }, newRate);
 
         pollingRate = newRate;
+
+        localStorage.setItem('pollingRate', newRate.toString());
     }
 
     function clickTitle() {
