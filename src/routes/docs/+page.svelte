@@ -98,12 +98,22 @@
         <h2>Chart</h2>
         <p>Represents a chart</p>
         <pre>
-interface SeriesMarker &lbrace;
-	id: number;
-	data: SeriesData[];
-	markers: SeriesMarker[];
-	title: string;
-	color: string;
+interface Chart &lbrace;
+    id: number;
+    data: SeriesData[];
+    markers: SeriesMarker[];
+    title: string;
+    color: string;
+&rbrace;
+        </pre>
+        <p>Example:</p>
+        <pre>
+&lbrace;
+    "id": 1,
+    "title": "$REAL"
+    "color": "yellow"
+    "data": [&lbrace; "time": 1724347506, "value": 120.00 &rbrace;],
+    "markers": [],
 &rbrace;
         </pre>
 
@@ -115,13 +125,9 @@ interface SeriesData &lbrace;
     value: number;
 &rbrace;
         </pre>
+        <p>Example:</p>
         <pre>
-[
-    &lbrace; "time": 1724347498, "value": 123.70 &rbrace;,
-    &lbrace; "time": 1724347499, "value": 124.20 &rbrace;,
-    &lbrace; "time": 1724347500, "value": 121.00 &rbrace;,
-    &lbrace; "time": 1724347501, "value": 127.65 &rbrace;
-]
+&lbrace; "time": 1724347498, "value": 123.70 &rbrace;,
         </pre>
 
         <div style="margin-top: 70px;"></div>
@@ -130,22 +136,23 @@ interface SeriesData &lbrace;
         <p>Represents a marker on a chart.</p>
         <pre>
 interface SeriesMarker &lbrace;
-    time: number; // Unix timestamp
-    position: 'aboveBar' | 'belowBar';
-    color: string; // Can be a named color or a hex code
-    shape: 'arrowUp' | 'arrowDown' | 'circle';
-    text: string;
-    size: number;
+    "time": number;     // Unix timestamp
+    "position": string; // "aboveBar" | "belowBar"
+    "color": string;    // Can be a named color or a hex code
+    "shape": string;    // "arrowUp" | "arrowDown" | "circle" | "square"
+    "text": string;     // Text to display
+    "size": number;     // Size of the marker
 &rbrace;
         </pre>
+        <p>Example:</p>
         <pre>
 &lbrace;
-    time: '1724347499',
-    position: 'aboveBar',
-    color: 'green',
-    shape: 'arrowDown',
-    text: 'Bought',
-    size: 2,
+    "time": 1724347499,
+    "position": "aboveBar",
+    "color": "green",
+    "shape": "arrowDown",
+    "text": "Bought",
+    "size": 2,
 &rbrace;,
         </pre>
     </Container>
