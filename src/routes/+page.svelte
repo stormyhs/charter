@@ -133,7 +133,7 @@
 
 <div style="display: flex; justify-content: center; margin-top: 5px;">
     <div style="display: flex; flex-direction: column; width: fit-content;">
-        <h1 style="margin: 0; padding: 0">Charter v0.1</h1>
+        <h1 style="margin: 0; padding: 0; text-align: center;">Charter</h1>
         <p style="margin: 0; padding: 0; text-align: center;">A charting web app</p>
         <span>Made with ❤️ by <a href="https://github.com/stormyhs" target="_blank">stormyhs</a></span>
     </div>
