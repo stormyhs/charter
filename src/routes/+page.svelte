@@ -47,11 +47,13 @@
         for(let newChart of newCharts) {
             let chart = charts.find(c => c.id === newChart.id);
             if(chart) {
-                chart.series?.setData(newChart.data);
-                chart.markers = newChart.markers;
+                chart.series?.setData(newChart.data || []);
+                chart.markers = newChart.markers || []
                 chart.title = newChart.title;
                 chart.color = newChart.color;
             } else {
+                if(!newChart.data) { newChart.data = [] }
+                if(!newChart.markers) { newChart.markers = [] }
                 charts.push(newChart);
             }
         }
@@ -61,11 +63,8 @@
                 charts = charts.filter(c => c.id !== chart.id);
             }
             if(!themedChartIds.includes(chart.id)) {
-                if(chart.api && chart.series) {
-                    chart.api.applyOptions(chartOptions);
-                    chart.series.applyOptions(lineSeriesOptions);
-                    themedChartIds.push(chart.id);
-                }
+                chart.api?.applyOptions(chartOptions);
+                chart.series?.applyOptions(lineSeriesOptions);
             }
             chart.series?.applyOptions({ color: chart.color })
         }
