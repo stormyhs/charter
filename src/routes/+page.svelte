@@ -199,7 +199,7 @@
     {#if charts.length === 0}
         <div style="display: flex; justify-content: center;">
             <Container title="No charts available" >
-                <p style="text-align: center;">No charts available.</p>
+                <p style="text-align: center;">Check out the <a href="/docs">API docs</a> to get started.</p>
             </Container>
         </div>
     {/if}
