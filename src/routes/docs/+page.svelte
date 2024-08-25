@@ -95,6 +95,18 @@
     <Container style="width: 70%">
         <h1>Types</h1>
 
+        <h2>Chart</h2>
+        <p>Represents a chart</p>
+        <pre>
+interface SeriesMarker &lbrace;
+	id: number;
+	data: SeriesData[];
+	markers: SeriesMarker[];
+	title: string;
+	color: string;
+&rbrace;
+        </pre>
+
         <h2>SeriesData</h2>
         <p>Represents a single data point on a chart.</p>
         <pre>
