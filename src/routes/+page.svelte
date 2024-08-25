@@ -344,6 +344,8 @@
             </button>
         </Container>
     </div>
+
+    <LoadingBar progress={loadingBar} />
 </div>
 
 

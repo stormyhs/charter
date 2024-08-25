@@ -1,4 +1,5 @@
 <script lang="ts">
+    export let style: string = "";
     export let progress: number = 0;
 </script>
 
@@ -11,6 +12,7 @@
         height: 8px;
         background-color: #000;
         overflow: hidden;
+        z-index: 1000; /* Because the TradingView charts seem to take over. */
     }
 
     .progress {
@@ -26,6 +28,6 @@
     }
 </style>
 
-<div class="loading-bar">
+<div class="loading-bar" style={style}>
     <div class="progress animate" style="transform: scaleX({progress / 100})"></div>
 </div>
