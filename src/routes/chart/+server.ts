@@ -37,8 +37,12 @@ export const POST: RequestHandler = async ({ request }) => {
             chart.markers = chart.markers.concat(incomingData.markers)
         }
 
-        chart.title = incomingData.title ? incomingData.title : `Chart ${incomingData.id}`
-        chart.color = incomingData.color
+        if(incomingData.title){
+            chart.title = incomingData.title
+        }
+        if(incomingData.color){
+            chart.color = incomingData.color
+        }
     } else {
         if(!incomingData.title){
             incomingData.title = `Chart ${incomingData.id}`
