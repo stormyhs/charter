@@ -48,7 +48,7 @@
             let chart = charts.find(c => c.id === newChart.id);
             if(chart) {
                 chart.series?.setData(newChart.data || []);
-                chart.markers = newChart.markers || []
+                chart.series?.setMarkers(newChart.markers || []);
                 chart.title = newChart.title;
                 chart.color = newChart.color;
             } else {
