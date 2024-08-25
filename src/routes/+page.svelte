@@ -235,10 +235,10 @@
     }
 </script>
 
-<div on:click={clickTitle} style="display: flex; justify-content: center; cursor: pointer; margin-top: 25px">
-    <div style="display: flex; flex-direction: column; text-align: center">
+<div style="display: flex; justify-content: center;">
+    <div on:click={clickTitle} style="display: flex; flex-direction: column; width: fit-content; cursor: pointer;">
         <h1 style="margin: 0; padding: 0">Charter v0.1</h1>
-        <p style="margin: 0; padding: 0;">A charting web app</p>
+        <p style="margin: 0; padding: 0; text-align: center;">A charting web app</p>
     </div>
 </div>
 
