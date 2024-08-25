@@ -117,6 +117,8 @@ interface Chart &lbrace;
 &rbrace;
         </pre>
 
+        <div style="margin-top: 70px;"></div>
+
         <h2>SeriesData</h2>
         <p>Represents a single data point on a chart.</p>
         <pre>
