@@ -6,6 +6,12 @@
     margin: auto;
     background-color: black;
 }
+@media (max-width: 1200px) {
+    .chart-container {
+        flex-direction: column;
+        width: 100%;
+    }
+}
 </style>
 
 <script lang="ts">
@@ -183,7 +189,6 @@
         }
     }, pollingRate);
 
-    // Cleanup the loop when the component is destroyed
     onDestroy(() => {
         clearInterval(loop);
     });
@@ -239,17 +244,42 @@
 
 <div style="height: 25px;"></div>
 
-<div style="display: flex; justify-content: center; align-items: center;">
+<div style="display: flex; flex-direction: row; justify-content: center; align-items: flex-start; flex-wrap: wrap;">
     <!-- Primary Chart -->
-    <div style="display: flex; flex-direction: column; gap: 25px; margin-left: 35px">
+    <div style="display: flex; flex-direction: column; gap: 25px; margin: 0 35px; margin-bottom: 25px">
+        <Container style="display: flex; align-items: center; gap: 15px; width: inherit;">
+            <span>API docs <a href="/docs">here</a>.</span>
+            <span>Polling rate (ms):
+                <input id="polling-rate" type="number" style="width: 75px;" value={pollingRate}/>
+                <button
+                    on:click={() => setPollingRate()}
+                    style="padding: 10px; border-radius: 8px; background-color: #22242c; color: white; border: none; cursor: pointer;"
+                >
+                    Set
+                </button>
+            </span>
+
+            <button
+                on:click={exampleData}
+                style="margin-left: auto; padding: 10px; border-radius: 8px; background-color: #22242c; color: white; border: none; cursor: pointer;"
+            >
+                Set Example Data
+            </button>
+            <button
+                on:click={clearData}
+                style="padding: 10px; border-radius: 8px; background-color: #22242c; color: white; border: none; cursor: pointer;"
+            >
+                Clear All Data
+            </button>
+        </Container>
         <div>
             <Container title={primaryTitle}>
                 <Chart container={{class: 'chart-container'}} width={1200} height={800} ref={(ref) => primaryChartApi = ref}>
                     <LineSeries
-                    data={[]}
-                    markers={[]}
-                    ref={(ref) => primaryLineSeries = ref}
-                />
+                        data={[]}
+                        markers={[]}
+                        ref={(ref) => primaryLineSeries = ref}
+                    />
                 </Chart>
 
                 <button
@@ -266,93 +296,55 @@
                 </button>
             </Container>
         </div>
-        <Container style="display: flex; align-items: center; gap: 15px; width: inherit;">
-            <span>API docs <a href="/docs">here</a>.</span>
-            <span>Polling rate (ms):
-                <input id="polling-rate" type="number" style="width: 75px;" value={pollingRate}/>
-                <button
-                    on:click={() => setPollingRate()}
-                    style="padding: 10px; border-radius: 8px; background-color: #22242c; color: white; border: none; cursor: pointer;"
-                    >
-                    Set
-                </button>
-            </span>
-
-            <button
-                on:click={exampleData}
-                style="margin-left: auto; padding: 10px; border-radius: 8px; background-color: #22242c; color: white; border: none; cursor: pointer;"
-                >
-                Set Example Data
-            </button>
-            <button
-                on:click={clearData}
-                style="padding: 10px; border-radius: 8px; background-color: #22242c; color: white; border: none; cursor: pointer;"
-                >
-                Clear All Data
-            </button>
-        </Container>
     </div>
 
     <!-- Secondary and Tertiary Charts on the side -->
-    <div style="display: flex; flex-direction: column; gap: 25px">
-        <div style="margin-left: 25px;">
-            <Container title={secondaryTitle}>
-                <Chart container={{class: 'chart-container'}} width={800} height={370} ref={(ref) => secondaryChartApi = ref}>
-                    <LineSeries
+    <div style="display: flex; flex-direction: column; gap: 25px; margin: 0 25px;">
+        <Container title={secondaryTitle}>
+            <Chart container={{class: 'chart-container'}} width={800} height={370} ref={(ref) => secondaryChartApi = ref}>
+                <LineSeries
                     data={[]}
                     markers={[]}
                     ref={(ref) => secondaryLineSeries = ref}
                 />
-                </Chart>
-                <button
-                    on:click={() => autoScale("secondary")}
-                    style="padding: 4px; background-color: #22242c; color: white; border: none; cursor: pointer;"
-                >
-                    Fit Scale
-                </button>
-                <button
-                    on:click={() => screenshot("secondary")}
-                    style="padding: 10px; border-radius: 8px; background-color: #22242c; color: white; border: none; cursor: pointer;"
-                >
-                    As Image
-                </button>
-            </Container>
-        </div>
+            </Chart>
+            <button
+                on:click={() => autoScale("secondary")}
+                style="padding: 4px; background-color: #22242c; color: white; border: none; cursor: pointer;"
+            >
+                Fit Scale
+            </button>
+            <button
+                on:click={() => screenshot("secondary")}
+                style="padding: 10px; border-radius: 8px; background-color: #22242c; color: white; border: none; cursor: pointer;"
+            >
+                As Image
+            </button>
+        </Container>
 
-        <div style="margin-left: 25px;">
-            <Container title={tertiaryTitle}>
-                <Chart container={{class: 'chart-container'}} width={800} height={370} ref={(ref) => tertiaryChartApi = ref}>
-                    <LineSeries
+        <Container title={tertiaryTitle}>
+            <Chart container={{class: 'chart-container'}} width={800} height={370} ref={(ref) => tertiaryChartApi = ref}>
+                <LineSeries
                     data={[]}
                     markers={[]}
                     ref={(ref) => tertiaryLineSeries = ref}
                 />
-                </Chart>
-                <button
-                    on:click={() => autoScale("tertiary")}
-                    style="padding: 4px; background-color: #22242c; color: white; border: none; cursor: pointer;"
-                >
-                    Fit Scale
-                </button>
-                <button
-                    on:click={() => screenshot("tertiary")}
-                    style="padding: 10px; border-radius: 8px; background-color: #22242c; color: white; border: none; cursor: pointer;"
-                >
-                    As Image
-                </button>
-            </Container>
-        </div>
+            </Chart>
+            <button
+                on:click={() => autoScale("tertiary")}
+                style="padding: 4px; background-color: #22242c; color: white; border: none; cursor: pointer;"
+            >
+                Fit Scale
+            </button>
+            <button
+                on:click={() => screenshot("tertiary")}
+                style="padding: 10px; border-radius: 8px; background-color: #22242c; color: white; border: none; cursor: pointer;"
+            >
+                As Image
+            </button>
+        </Container>
     </div>
-
-    <LoadingBar progress={loadingBar} />
 </div>
+
 
 <div style="height: 35px;"></div>
-
-<div class="center" style="gap: 25px">
-</div>
-
-<div style="height: 35px;"></div>
-
-<div class="center" style="gap: 35px">
-</div>
