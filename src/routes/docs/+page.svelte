@@ -127,7 +127,7 @@
 
         <div style="margin-top: 70px;"></div>
 
-        <h3><span class="verb green">POST</span> /loadingbar</h3>
+        <h3><span class="verb orange">PUT</span> /loadingbar</h3>
         <p>Sets the progress of the loading bar.</p>
         <h3>Body</h3>
         <p><span class="code">number</span></p>
