@@ -59,9 +59,18 @@ export const PUT: RequestHandler = async ({ request }) => {
 
     let chart = currentData.find(c => c.id === incomingData.id)
     if(chart) {
-        chart.data = incomingData.data
-        chart.markers = incomingData.markers
-        chart.title = incomingData.title
+        if(incomingData.data){
+            chart.data = incomingData.data
+        }
+        if(incomingData.markers){
+            chart.markers = incomingData.markers
+        }
+        if(incomingData.title){
+            chart.title = incomingData.title
+        }
+        if(incomingData.color){
+            chart.color = incomingData.color
+        }
     } else {
         currentData.push(incomingData)
     }
