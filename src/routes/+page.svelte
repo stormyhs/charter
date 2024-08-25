@@ -173,7 +173,7 @@
     {#each charts as chart}
         <div style="display: flex; justify-content: center;">
             <Container title={chart.title} >
-                <Chart container={{class: 'chart-container'}} width={800} height={370} ref={(ref) => chart.api = ref}>
+                <Chart container={{class: 'chart-container'}} width={925} height={400} ref={(ref) => chart.api = ref}>
                     <LineSeries
                         data={[]}
                         markers={[]}
