@@ -127,7 +127,7 @@
             primaryChartApi.applyOptions({
                 watermark: {
                     text: primaryTitle,
-                    color: 'teal',
+                    color: '#8090FF',
                     visible: true,
                     vertAlign: "top",
                     horzAlign: "left"
@@ -139,7 +139,7 @@
             secondaryChartApi.applyOptions({
                 watermark: {
                     text: secondaryTitle,
-                    color: 'teal',
+                    color: '#80FF90',
                     visible: true,
                     vertAlign: "top",
                     horzAlign: "left"
@@ -151,7 +151,7 @@
             tertiaryChartApi.applyOptions({
                 watermark: {
                     text: tertiaryTitle,
-                    color: 'teal',
+                    color: '#FF8090',
                     visible: true,
                     vertAlign: "top",
                     horzAlign: "left"
