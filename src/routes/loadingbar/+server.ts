@@ -1,6 +1,7 @@
 import { json } from '@sveltejs/kit';
 import { get } from 'svelte/store'
 import { loadingBar } from '../../stores'
+import { broadcast } from "../../lib/wsServer";
 
 import type { RequestHandler } from '@sveltejs/kit';
 
@@ -24,10 +25,21 @@ export const PUT: RequestHandler = async ({ request }) => {
 
     loadingBar.set(newProgress)
 
+    broadcast({
+        action: "putLoadingBar",
+        progress: newProgress
+    })
+
     return new Response(null, {status: 200})
 }
 
 export const DELETE: RequestHandler = async () => {
     loadingBar.set(0)
+
+    broadcast({
+        action: "putLoadingBar",
+        progress: 0
+    })
+
     return new Response(null, {status: 200})
 }

@@ -20,7 +20,9 @@
 	},
 	"type": "module",
 	"dependencies": {
+		"@types/ws": "^8.5.12",
 		"lightweight-charts": "^4.2.0",
-		"svelte-lightweight-charts": "^2.2.0"
+		"svelte-lightweight-charts": "^2.2.0",
+		"ws": "^8.18.0"
 	}
 }

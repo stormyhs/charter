@@ -1,4 +1,4 @@
-import type { DeepPartial, ChartOptions } from 'lightweight-charts';
+import type { DeepPartial, ChartOptions, LineSeriesOptions } from 'lightweight-charts';
 
 export const chartOptions: DeepPartial<ChartOptions> = {
 	layout: {
@@ -21,6 +21,9 @@ export const chartOptions: DeepPartial<ChartOptions> = {
 	}
 }
 
-export const lineSeriesOptions = {
+export const lineSeriesOptions: DeepPartial<LineSeriesOptions> = {
 	lastPriceAnimation: 2,
+	priceFormat: {
+		precision: 3
+	}
 }

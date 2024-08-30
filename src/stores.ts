@@ -4,9 +4,9 @@ import type { Writable } from 'svelte/store'
 import type { LineData, IChartApi, ISeriesApi } from 'lightweight-charts';
 import type { SeriesMarker, Time } from 'lightweight-charts';
 
-interface ChartData {
+export interface ChartData {
 	id: number;
-	series: ISeriesApi<'Line'> | null;
+	series?: ISeriesApi<'Line'>;
 	markers: SeriesMarker<Time>[];
 	data: LineData[];
 	title: string;

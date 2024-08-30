@@ -24,8 +24,8 @@
         api: IChartApi | null;
         series: ISeriesApi<'Line'> | null;
         markers: SeriesMarker<Time>[];
-        title: string;
-        color: string;
+        title?: string;
+        color?: string;
     }
 
     let charts: ChartData[] = [];
@@ -41,38 +41,122 @@
         }
     }
 
-    async function getData() {
-        let newCharts = await fetch('/chart').then(res => res.json());
-        for(let newChart of newCharts) {
-            let chart = charts.find(c => c.id === newChart.id);
-            if(chart) {
-                chart.series?.setData(newChart.data || []);
-                chart.series?.setMarkers(newChart.markers || []);
-                chart.title = newChart.title;
-                chart.color = newChart.color;
+    function appendData(
+        chart: {id: number, data: LineData[], markers: SeriesMarker<Time>[], title?: string, color?: string},
+        mode: 'append' | 'replace' = 'append'
+    ) {
+        console.log('Appending data', chart);
+        let existingChart = charts.find(c => c.id === chart.id);
+        if(existingChart) {
+            if(mode === 'replace') {
+                existingChart.series?.setData(chart.data);
+                existingChart.series?.setMarkers(chart.markers);
+                if(chart.title) { existingChart.title = chart.title }
+                if(chart.color) { existingChart.color = chart.color }
             } else {
-                if(!newChart.data) { newChart.data = [] }
-                if(!newChart.markers) { newChart.markers = [] }
-                charts.push(newChart);
-            }
-        }
+                let newData = existingChart.series?.data().map(d => d) as LineData[];
+                // Add the new data to the existing data, overwriting any duplicates
+                for(let data of chart.data) {
+                    let existingData = newData?.find(d => d.time === data.time);
+                    if(existingData) {
+                        existingData = data;
+                    } else {
+                        newData.push(data);
+                    }
+                }
 
-        for(let chart of charts) {
-            if(!newCharts.find((c: Chart) => c.id === chart.id)) {
-                charts = charts.filter(c => c.id !== chart.id);
+                let newMarkers = existingChart.series?.markers().map(m => m) as SeriesMarker<Time>[];
+                for(let marker of chart.markers) {
+                    let existingMarker = newMarkers?.find(m => m.time === marker.time);
+                    if(existingMarker) {
+                        existingMarker = marker;
+                    } else {
+                        newMarkers.push(marker);
+                    }
+                }
+
+                existingChart.series?.setData(newData);
+                existingChart.series?.setMarkers(newMarkers);
+                if(chart.title) { existingChart.title = chart.title }
+                if(chart.color) { existingChart.color = chart.color }
             }
-            if(!themedChartIds.includes(chart.id)) {
-                chart.api?.applyOptions(chartOptions);
-                chart.series?.applyOptions(lineSeriesOptions);
-            }
-            chart.series?.applyOptions({ color: chart.color })
+        } else {
+            charts.push({
+                id: chart.id,
+                api: null,
+                series: null,
+                markers: chart.markers,
+                title: chart.title || `Chart ${chart.id}`,
+                color: chart.color
+            });
+            charts = charts;
+
+            setTimeout(() => {
+                let newChart = charts.find(c => c.id === chart.id);
+                try {
+                    console.log('Setting data', chart.data);
+                    newChart?.series?.setData(chart.data);
+                } catch (e) {
+                    console.warn(e)
+                }
+                newChart?.series?.setMarkers(chart.markers);
+            }, 0)
         }
 
         charts = charts;
+    }
 
-        // Loading bar
-        let newLoadingBar = await fetch('/loadingbar').then(res => res.json());
-        loadingBar = newLoadingBar;
+    function removeChart(id: number) {
+        charts = charts.filter(c => c.id !== id);
+        charts = charts;
+    }
+
+    if(browser) {
+        // Initially, we get all the charts with a GET request. Any subsequent changes are handled by the WS.
+        const getData = async () => {
+            let res = await fetch('/chart');
+            let data = await res.json();
+
+            for(let chart of data) {
+                appendData(chart, 'replace');
+            }
+        }
+
+        const connect = async () => {
+            const ws = new WebSocket(`ws://${window.location.hostname}:8080/chart`);
+            ws.onmessage = (e) => {
+                let data;
+                try {
+                    data = JSON.parse(e.data);
+                } catch { return }
+                if(data.action == "postChart" || data.action == "putChart") {
+                    let newChart = data.chart;
+
+                    if(!newChart.data) { newChart.data = [] }
+                    if(!newChart.markers) { newChart.markers = [] }
+
+                    appendData(newChart, data.action == "postChart" ? 'append' : 'replace');
+                }
+                else if(data.action == "deleteChart") {
+                    let newChart = data.chart;
+                    removeChart(newChart.id);
+                }
+                else if(data.action == "putLoadingBar") {
+                    loadingBar = data.progress;
+                }
+                else if(data.action == "reset") {
+                    charts = [];
+                    loadingBar = 0;
+                }
+            }
+
+            ws.onopen = () => {
+                ws.send('Hello from the client!');
+            }
+        }
+
+        getData()
+        connect()
     }
 
     function screenshot(id: number) {
@@ -103,28 +187,19 @@
 
     let loop = setInterval(() => {
         if (browser) {
-            getData();
+            for(let chart of charts) {
+                if(!themedChartIds.includes(chart.id)) {
+                    chart.api?.applyOptions(chartOptions);
+                    chart.series?.applyOptions(lineSeriesOptions);
+                }
+                chart.series?.applyOptions({ color: chart.color })
+            }
         }
     }, pollingRate);
 
     onDestroy(() => {
         clearInterval(loop);
     });
-
-    function setPollingRate() {
-        let newRate = parseInt((document.getElementById('polling-rate') as HTMLInputElement).value);
-
-        clearInterval(loop);
-        loop = setInterval(() => {
-            if (browser) {
-                getData();
-            }
-        }, newRate);
-
-        pollingRate = newRate;
-
-        localStorage.setItem('pollingRate', newRate.toString());
-    }
 
     function clearData() {
         fetch('/reset', { method: 'delete' });
@@ -144,21 +219,12 @@
 <div style="display: flex; justify-content: center; margin-bottom: 25px;">
     <Container style="display: flex; align-items: center; gap: 15px; width: inherit; width: 70%">
         <span>API docs <a href="/docs">here</a>.</span>
-        <span>Polling rate (ms):
-            <input id="polling-rate" type="number" style="width: 75px;" value={pollingRate}/>
-            <button
-                on:click={() => setPollingRate()}
-                style="padding: 10px; border-radius: 8px; background-color: #22242c; color: white; border: none; cursor: pointer;"
-            >
-                Set
-            </button>
-        </span>
 
         <button
             on:click={clearData}
-            style="padding: 10px; border-radius: 8px; background-color: #22242c; color: white; border: none; cursor: pointer;"
+            style="margin-left: auto; padding: 10px; border-radius: 8px; background-color: #22242c; color: white; border: none; cursor: pointer;"
         >
-            Clear All Data
+            Delete all data
         </button>
     </Container>
 </div>
