@@ -33,14 +33,6 @@
 
     let loadingBar: number = 0;
 
-    let pollingRate: number = 300;
-    if(browser) {
-        let storedPollingRate = localStorage.getItem('pollingRate');
-        if(storedPollingRate) {
-            pollingRate = parseInt(storedPollingRate);
-        }
-    }
-
     function appendData(
         chart: {id: number, data: LineData[], markers: SeriesMarker<Time>[], title?: string, color?: string},
         mode: 'append' | 'replace' = 'append'
@@ -185,6 +177,8 @@
         chart.api?.timeScale().fitContent()
     }
 
+    // The chart's API only works once its mounted. Because I am poop at svelte, this is the cope I shall use.
+    // Mad about it? Make a PR.
     let loop = setInterval(() => {
         if (browser) {
             for(let chart of charts) {
@@ -195,7 +189,7 @@
                 chart.series?.applyOptions({ color: chart.color })
             }
         }
-    }, pollingRate);
+    }, 1000);
 
     onDestroy(() => {
         clearInterval(loop);
