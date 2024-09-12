@@ -6,11 +6,14 @@ import type { SeriesMarker, Time } from 'lightweight-charts';
 
 export interface ChartData {
 	id: number;
-	series?: ISeriesApi<'Line'>;
-	markers: SeriesMarker<Time>[];
-	data: LineData[];
 	title: string;
-	color: string;
+
+	series?: ISeriesApi<'Line'>[];
+
+	markers: SeriesMarker<Time>[];
+	data: LineData[][];
+
+	colors: string[];
 }
 export const charts: Writable<ChartData[]> = writable([]);
 

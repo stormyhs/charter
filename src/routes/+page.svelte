@@ -12,20 +12,25 @@
     import { browser } from "$app/environment";
 
     import { Chart, LineSeries } from "svelte-lightweight-charts";
-    import type { LineData, IChartApi, ISeriesApi, SeriesMarker, Time } from "lightweight-charts";
+    import type { LineData, IChartApi, ISeriesApi } from "lightweight-charts";
 
     import { chartOptions, lineSeriesOptions } from '../global';
     import Container from '../components/Container.svelte';
     import LoadingBar from '../components/LoadingBar.svelte';
     import Grid from '../components/Grid.svelte';
 
+    interface lineApis {
+        [key: number]: ISeriesApi<'Line'>;
+    }
+
     interface ChartData {
         id: number;
-        api: IChartApi | null;
-        series: ISeriesApi<'Line'> | null;
-        markers: SeriesMarker<Time>[];
         title?: string;
-        color?: string;
+        data: LineData[][];
+
+        api: IChartApi | null;
+        lineApis: lineApis;
+        colors?: string[];
     }
 
     let charts: ChartData[] = [];
@@ -33,66 +38,69 @@
 
     let loadingBar: number = 0;
 
-    function appendData(
-        chart: {id: number, data: LineData[], markers: SeriesMarker<Time>[], title?: string, color?: string},
-        mode: 'append' | 'replace' = 'append'
-    ) {
-        console.log('Appending data', chart);
+    function appendToChart(chart: ChartData) {
+        let existingChartIndex = charts.findIndex(c => c.id === chart.id);
+        if(existingChartIndex === -1) {
+            setChart(chart);
+            return;
+        }
+
+        let existingChart = charts[existingChartIndex];
+        for(let i = 0; i < chart.data.length; i++) {
+            let series = chart.data[i];
+
+            if(!existingChart.data[i]) {
+                existingChart.data[i] = chart.data[i];
+                try {
+                    existingChart.lineApis[i].setData(existingChart.data[i]);
+                } catch {}
+            }
+            else {
+                existingChart.data[i] = existingChart.data[i].concat(series);
+                try {
+                    existingChart.lineApis[i].setData(existingChart.data[i]);
+                } catch {}
+            }
+        }
+
+        if(chart.colors != null && chart.colors.length > 0) {
+            existingChart.colors = chart.colors;
+            for(let i = 0; i < chart.colors.length; i++) {
+                if(chart.colors[i] != null) {
+                    existingChart.lineApis?.[i]?.applyOptions({ color: chart.colors[i] });
+                }
+            }
+        }
+
+        if(chart.title) {
+            existingChart.title = chart.title;
+        }
+
+        charts = charts;
+    }
+
+    function setChart(chart: ChartData) {
         let existingChart = charts.find(c => c.id === chart.id);
         if(existingChart) {
-            if(mode === 'replace') {
-                existingChart.series?.setData(chart.data);
-                existingChart.series?.setMarkers(chart.markers);
-                if(chart.title) { existingChart.title = chart.title }
-                if(chart.color) { existingChart.color = chart.color }
-            } else {
-                let newData = existingChart.series?.data().map(d => d) as LineData[];
-                // Add the new data to the existing data, overwriting any duplicates
-                for(let data of chart.data) {
-                    let existingData = newData?.find(d => d.time === data.time);
-                    if(existingData) {
-                        existingData = data;
-                    } else {
-                        newData.push(data);
-                    }
-                }
-
-                let newMarkers = existingChart.series?.markers().map(m => m) as SeriesMarker<Time>[];
-                for(let marker of chart.markers) {
-                    let existingMarker = newMarkers?.find(m => m.time === marker.time);
-                    if(existingMarker) {
-                        existingMarker = marker;
-                    } else {
-                        newMarkers.push(marker);
-                    }
-                }
-
-                existingChart.series?.setData(newData);
-                existingChart.series?.setMarkers(newMarkers);
-                if(chart.title) { existingChart.title = chart.title }
-                if(chart.color) { existingChart.color = chart.color }
+            existingChart.data = chart.data;
+            if(chart.title != null) {
+                existingChart.title = chart.title;
             }
-        } else {
-            charts.push({
+            if(chart.colors != null) {
+                existingChart.colors = chart.colors;
+            } else {
+            }
+        }
+        else {
+            let newChart: ChartData = {
                 id: chart.id,
-                api: null,
-                series: null,
-                markers: chart.markers,
-                title: chart.title || `Chart ${chart.id}`,
-                color: chart.color
-            });
-            charts = charts;
-
-            setTimeout(() => {
-                let newChart = charts.find(c => c.id === chart.id);
-                try {
-                    console.log('Setting data', chart.data);
-                    newChart?.series?.setData(chart.data);
-                } catch (e) {
-                    console.warn(e)
-                }
-                newChart?.series?.setMarkers(chart.markers);
-            }, 0)
+                title: chart.title,
+                data: chart.data,
+                api: chart.api,
+                lineApis: {},
+                colors: chart.colors
+            }
+            charts.push(newChart);
         }
 
         charts = charts;
@@ -103,50 +111,51 @@
         charts = charts;
     }
 
+    const getData = async () => {
+        let res = await fetch('/api/charts');
+        let data = await res.json();
+
+        for(let chart of data) {
+            setChart(chart);
+        }
+    }
+
+    const connect = async () => {
+        const ws = new WebSocket(`ws://${window.location.hostname}:8080/chart`);
+        ws.onmessage = (e) => {
+            let data;
+            try {
+                data = JSON.parse(e.data);
+            } catch { return }
+
+            if(data.action == "postChart" || data.action == "putChart") {
+                let newChart = data.chart;
+
+                if(!newChart.data) { newChart.data = [] }
+                if(!newChart.markers) { newChart.markers = [] }
+
+                appendToChart(newChart);
+            }
+            else if(data.action == "deleteChart") {
+                let newChart = data.chart;
+                removeChart(newChart.id);
+            }
+            else if(data.action == "putLoadingBar") {
+                loadingBar = data.progress;
+            }
+            else if(data.action == "reset") {
+                charts = [];
+                loadingBar = 0;
+            }
+        }
+
+        ws.onopen = () => {
+            ws.send('Hello from the client!');
+        }
+    }
+
+    // Initially, we get all the charts with a GET request. Any subsequent changes are handled by the WS.
     if(browser) {
-        // Initially, we get all the charts with a GET request. Any subsequent changes are handled by the WS.
-        const getData = async () => {
-            let res = await fetch('/chart');
-            let data = await res.json();
-
-            for(let chart of data) {
-                appendData(chart, 'replace');
-            }
-        }
-
-        const connect = async () => {
-            const ws = new WebSocket(`ws://${window.location.hostname}:8080/chart`);
-            ws.onmessage = (e) => {
-                let data;
-                try {
-                    data = JSON.parse(e.data);
-                } catch { return }
-                if(data.action == "postChart" || data.action == "putChart") {
-                    let newChart = data.chart;
-
-                    if(!newChart.data) { newChart.data = [] }
-                    if(!newChart.markers) { newChart.markers = [] }
-
-                    appendData(newChart, data.action == "postChart" ? 'append' : 'replace');
-                }
-                else if(data.action == "deleteChart") {
-                    let newChart = data.chart;
-                    removeChart(newChart.id);
-                }
-                else if(data.action == "putLoadingBar") {
-                    loadingBar = data.progress;
-                }
-                else if(data.action == "reset") {
-                    charts = [];
-                    loadingBar = 0;
-                }
-            }
-
-            ws.onopen = () => {
-                ws.send('Hello from the client!');
-            }
-        }
-
         getData()
         connect()
     }
@@ -157,7 +166,7 @@
         chart.api?.applyOptions({
             watermark: {
                 text: chart.title,
-                color: chart.color,
+                color: "orange",
                 visible: true,
                 vertAlign: "top",
                 horzAlign: "left"
@@ -177,6 +186,10 @@
         chart.api?.timeScale().fitContent()
     }
 
+    function clearData() {
+        fetch('/api/reset', { method: 'delete' });
+    }
+
     // The chart's API only works once its mounted. Because I am poop at svelte, this is the cope I shall use.
     // Mad about it? Make a PR.
     let loop = setInterval(() => {
@@ -184,9 +197,17 @@
             for(let chart of charts) {
                 if(!themedChartIds.includes(chart.id)) {
                     chart.api?.applyOptions(chartOptions);
-                    chart.series?.applyOptions(lineSeriesOptions);
+                    for(let lineApiKey of Object.keys(chart.lineApis)) {
+                        let lineApi = chart.lineApis[lineApiKey as unknown as number];
+                        lineApi?.applyOptions(lineSeriesOptions);
+                    }
                 }
-                chart.series?.applyOptions({ color: chart.color })
+
+                if(chart.colors && chart.colors.length > 0) {
+                    for(let i = 0; i < chart.colors.length; i++) {
+                        chart.lineApis[i].applyOptions({ color: chart.colors[i] });
+                    }
+                }
             }
         }
     }, 1000);
@@ -195,9 +216,6 @@
         clearInterval(loop);
     });
 
-    function clearData() {
-        fetch('/reset', { method: 'delete' });
-    }
 </script>
 
 <div style="display: flex; justify-content: center; margin-top: 5px;">
@@ -227,12 +245,22 @@
     {#each charts as chart}
         <div style="display: flex; justify-content: center;">
             <Container title={chart.title} >
-                <Chart container={{class: 'chart-container'}} width={925} height={400} ref={(ref) => chart.api = ref}>
-                    <LineSeries
-                        data={[]}
-                        markers={[]}
-                        ref={(ref) => chart.series = ref}
-                    />
+                <Chart
+                        container={{class: 'chart-container'}}
+                        width={925}
+                        height={400}
+                        ref={(ref) => { chart.api = ref }}
+                >
+                    {#if chart.data}
+                        {#each chart.data as series, i}
+                            <LineSeries
+                                data={series}
+                                ref={(ref) => {
+                                    if(ref) { chart.lineApis[i] = ref; }
+                                }} 
+                            />
+                        {/each}
+                    {/if}
                 </Chart>
 
                 <button

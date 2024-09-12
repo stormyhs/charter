@@ -1,7 +1,7 @@
 import { json } from '@sveltejs/kit';
 import { get } from 'svelte/store'
-import { loadingBar } from '../../stores'
-import { broadcast } from "../../lib/wsServer";
+import { loadingBar } from '../../../stores'
+import { broadcast } from "../../../lib/wsServer";
 
 import type { RequestHandler } from '@sveltejs/kit';
 
