@@ -1,8 +1,8 @@
 import { WebSocketServer } from "ws";
+import type { BroadcastMessage } from "../types";
 
 let wsServer: WebSocketServer;
 
-// TODO: svelte is randomly recreating this, causing the client list to be lost. This is probably not where the websocket server should be created.
 export function createServer() {
     if(wsServer) {
         return wsServer;
@@ -16,10 +16,7 @@ export function createServer() {
     }
 
     wsServer.on("connection", (socket) => {
-        socket.send("Hello! I am a WebSocket server.");
-        socket.on("message", (message) => {
-            console.log(`Received message => ${message}`);
-        });
+        console.log(`Client connected`);
     });
 
     wsServer.on("error", (error) => {
@@ -29,7 +26,7 @@ export function createServer() {
     return wsServer;
 }
 
-export function broadcast(data: any) {
+export function broadcast(data: BroadcastMessage) {
     wsServer.clients.forEach((client) => {
         if (client.readyState === 1) {
             client.send(JSON.stringify(data));

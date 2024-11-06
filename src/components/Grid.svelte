@@ -1,21 +1,22 @@
 <style>
-    .grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(950px, 1fr));
-        gap: 16px;
-        padding: 16px;
-    }
-
-    .center {
+    .parent {
         margin-left: auto;
         margin-right: auto;
+        max-width: 70vw;
     }
 
+    .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(900px, 1fr));
+        gap: 20px;
+    }
 </style>
 
 <script lang="ts">
 </script>
 
-<div class="grid center">
-    <slot></slot>
+<div class="parent">
+    <div class="grid">
+        <slot></slot>
+    </div>
 </div>

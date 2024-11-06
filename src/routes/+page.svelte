@@ -8,220 +8,271 @@
 </style>
 
 <script lang="ts">
-    import { onDestroy } from 'svelte';
-    import { browser } from "$app/environment";
+    import { onMount } from "svelte";
+    import axios from "axios";
 
+    import Container from "../components/Container.svelte";
+    import Grid from "../components/Grid.svelte";
+    import LoadingBar from "../components/LoadingBar.svelte";
+
+    import type { DeepPartial, GridOptions, IChartApi, ISeriesApi, LayoutOptions, SeriesMarker, Time } from "lightweight-charts";
+    import type { ChartProps } from "svelte-lightweight-charts";
     import { Chart, LineSeries } from "svelte-lightweight-charts";
-    import type { LineData, IChartApi, ISeriesApi } from "lightweight-charts";
 
-    import { chartOptions, lineSeriesOptions } from '../global';
-    import Container from '../components/Container.svelte';
-    import LoadingBar from '../components/LoadingBar.svelte';
-    import Grid from '../components/Grid.svelte';
+    interface CopeChart {
+        title: string,
+        id: number,
+        ref: IChartApi,
+        color?: string,
+    };
+    type UnionChart = CopeChart & ChartProps;
+    let charts: UnionChart[] = $state([]);
 
-    interface lineApis {
-        [key: number]: ISeriesApi<'Line'>;
+    interface CopeLine {
+        chartId: number,
+        points: { time: Time, value: number }[],
+        markers: SeriesMarker<Time>[],
+        color?: string,
+        ref: ISeriesApi<"Line">,
     }
+    let lines: CopeLine[] = $state([]);
 
-    interface ChartData {
-        id: number;
-        title?: string;
-        data: LineData[][];
-
-        api: IChartApi | null;
-        lineApis: lineApis;
-        colors?: string[];
-    }
-
-    let charts: ChartData[] = [];
-    let themedChartIds: number[] = [];
-
-    let loadingBar: number = 0;
-
-    function appendToChart(chart: ChartData) {
-        let existingChartIndex = charts.findIndex(c => c.id === chart.id);
-        if(existingChartIndex === -1) {
-            setChart(chart);
-            return;
-        }
-
-        let existingChart = charts[existingChartIndex];
-        for(let i = 0; i < chart.data.length; i++) {
-            let series = chart.data[i];
-
-            if(!existingChart.data[i]) {
-                existingChart.data[i] = chart.data[i];
+    $effect(() => {
+        for(let chart of charts) {
+            let lines = getChartLines(chart.id);
+            for(let line of lines) {
+                if(!line.ref) { continue; }
                 try {
-                    existingChart.lineApis[i].setData(existingChart.data[i]);
-                } catch {}
-            }
-            else {
-                existingChart.data[i] = existingChart.data[i].concat(series);
+                    line.ref.setData(line.points);
+                } catch(err) {
+                    console.error(err);
+                }
                 try {
-                    existingChart.lineApis[i].setData(existingChart.data[i]);
-                } catch {}
-            }
-        }
-
-        if(chart.colors != null && chart.colors.length > 0) {
-            existingChart.colors = chart.colors;
-            for(let i = 0; i < chart.colors.length; i++) {
-                if(chart.colors[i] != null) {
-                    existingChart.lineApis?.[i]?.applyOptions({ color: chart.colors[i] });
+                    line.ref.setMarkers(line.markers);
+                    line.ref.applyOptions({
+                        color: line.color,
+                    });
+                } catch(err) {
+                    console.error(err);
                 }
             }
         }
+    });
 
-        if(chart.title) {
-            existingChart.title = chart.title;
-        }
-
-        charts = charts;
+    const layout: DeepPartial<LayoutOptions> = {
+        background: {
+            color: "#22242c",
+        },
+        textColor: "#f8f8f2",
     }
 
-    function setChart(chart: ChartData) {
-        let existingChart = charts.find(c => c.id === chart.id);
-        if(existingChart) {
-            existingChart.data = chart.data;
-            if(chart.title != null) {
-                existingChart.title = chart.title;
-            }
-            if(chart.colors != null) {
-                existingChart.colors = chart.colors;
-            } else {
-            }
-        }
-        else {
-            let newChart: ChartData = {
-                id: chart.id,
-                title: chart.title,
-                data: chart.data,
-                api: chart.api,
-                lineApis: {},
-                colors: chart.colors
-            }
-            charts.push(newChart);
-        }
-
-        charts = charts;
+    const grid: DeepPartial<GridOptions> = {
+        vertLines: {
+            color: "#44475a",
+        },
+        horzLines: {
+            color: "#44475a",
+        },
     }
 
-    function removeChart(id: number) {
-        charts = charts.filter(c => c.id !== id);
-        charts = charts;
-    }
-
-    const getData = async () => {
-        let res = await fetch('/api/charts');
-        let data = await res.json();
-
-        for(let chart of data) {
-            setChart(chart);
+    function getChart(id: number): UnionChart | undefined {
+        for(let chart of charts) {
+            if(chart.id === id) {
+                return chart;
+            }
         }
     }
 
-    const connect = async () => {
-        const ws = new WebSocket(`ws://${window.location.hostname}:8080/chart`);
-        ws.onmessage = (e) => {
-            let data;
-            try {
-                data = JSON.parse(e.data);
-            } catch { return }
-
-            if(data.action == "postChart" || data.action == "putChart") {
-                let newChart = data.chart;
-
-                if(!newChart.data) { newChart.data = [] }
-                if(!newChart.markers) { newChart.markers = [] }
-
-                appendToChart(newChart);
+    function getChartLines(id: number): CopeLine[] {
+        let chartLines = [];
+        for(let line of lines) {
+            if(line.chartId === id) {
+                chartLines.push(line);
             }
-            else if(data.action == "deleteChart") {
-                let newChart = data.chart;
-                removeChart(newChart.id);
+            if(line.chartId == null) {
+                console.error("line has no chartId");
             }
-            else if(data.action == "putLoadingBar") {
-                loadingBar = data.progress;
-            }
-            else if(data.action == "reset") {
+        }
+
+        return chartLines;
+    }
+
+    async function getCharts() {
+        await axios.get("/api/charts")
+            .then((res) => {
+                let i = 0;
+                for(let chart of res.data) {
+                    chart.index = i;
+
+                    for(let line of chart.lines) {
+                        line.chartId = chart.index;
+                    }
+
+                    setChart(chart);
+                }
+            })
+            .catch((err) => {
+                console.error(err);
+            });
+    }
+
+    async function clearCharts() {
+        await axios.delete("/api/charts")
+            .then(() => {
                 charts = [];
-                loadingBar = 0;
+            })
+            .catch((err) => {
+                console.error(err);
+            });
+    }
+
+    async function setChart(chart: any) {
+        const index = charts.findIndex((c: any) => c.id === chart.id);
+
+        if (index === -1) {
+            charts.push(chart);
+        } else {
+            charts[index].title = chart.title;
+            charts[index].color = chart.color;
+        }
+        charts = [...charts];
+
+        let lineId = 0;
+        for(let line of chart.lines) {
+            line.chartId = chart.id;
+            line.id = lineId;
+
+            const lineIndex = lines.findIndex((l: any) => l.id === line.id);
+
+            if (lineIndex === -1) {
+                lines.push(line);
+            } else {
+                lines[lineIndex].points = line.points;
+                lines[lineIndex].markers = line.markers;
+                lines[lineIndex].color = line.color;
             }
-        }
 
-        ws.onopen = () => {
-            ws.send('Hello from the client!');
+            lineId++;
         }
+        lines = [...lines];
     }
 
-    // Initially, we get all the charts with a GET request. Any subsequent changes are handled by the WS.
-    if(browser) {
-        getData()
-        connect()
+    async function deleteChart(chartId: number) {
+        charts = charts.filter((chart) => chart.id !== chartId);
+        lines = lines.filter((line) => line.chartId !== chartId);
+
+        charts = [...charts];
+        lines = [...lines];
     }
 
-    function screenshot(id: number) {
-        let chart = charts.find(c => c.id === id);
+    async function deleteLine(lineId: number) {
+        lines = lines.filter((line) => line.chartId !== lineId);
+        lines = [...lines];
+    }
+
+    function fitToScale(index: number) {
+        const chart = getChart(index);
         if(!chart) { return }
-        chart.api?.applyOptions({
+        chart.ref.timeScale().fitContent();
+    }
+
+    async function screenshot(index: number) {
+        const chart = getChart(index);
+        if(!chart) { return }
+
+        chart.ref.applyOptions({
             watermark: {
                 text: chart.title,
-                color: "orange",
+                color: chart.color || "#f8f8f2",
                 visible: true,
                 vertAlign: "top",
                 horzAlign: "left"
             }
         });
-        let canvas = chart.api?.takeScreenshot();
+
+        let canvas = chart.ref.takeScreenshot();
         canvas?.toBlob((blob: any) => {
             const url = URL.createObjectURL(blob);
             window.open(url, '_blank');
         });
-        chart.api?.applyOptions({watermark: {visible: false}});
+
+        chart.ref.applyOptions({
+            watermark: {
+                visible: false
+            }
+        });
     }
 
-    function autoScale(id: number) {
-        let chart = charts.find(c => c.id === id);
+    async function copyScreenshot(index: number) {
+        const chart = getChart(index);
         if(!chart) { return }
-        chart.api?.timeScale().fitContent()
+
+        chart.ref.applyOptions({
+            watermark: {
+                text: chart.title,
+                color: chart.color || "#f8f8f2",
+                visible: true,
+                vertAlign: "top",
+                horzAlign: "left"
+            }
+        });
+
+        let canvas = chart.ref.takeScreenshot();
+
+        let blob = await fetch(canvas.toDataURL()).then((res) => res.blob());
+        navigator.clipboard.write([
+            new ClipboardItem({
+                "image/png": blob
+            })
+        ]);
+
+        chart.ref.applyOptions({
+            watermark: {
+                visible: false
+            }
+        });
     }
 
-    function clearData() {
-        fetch('/api/reset', { method: 'delete' });
-    }
+    async function startWs() {
+        const ws = new WebSocket("ws://localhost:8080");
 
-    // The chart's API only works once its mounted. Because I am poop at svelte, this is the cope I shall use.
-    // Mad about it? Make a PR.
-    let loop = setInterval(() => {
-        if (browser) {
-            for(let chart of charts) {
-                if(!themedChartIds.includes(chart.id)) {
-                    chart.api?.applyOptions(chartOptions);
-                    for(let lineApiKey of Object.keys(chart.lineApis)) {
-                        let lineApi = chart.lineApis[lineApiKey as unknown as number];
-                        lineApi?.applyOptions(lineSeriesOptions);
-                    }
-                }
+        ws.onmessage = (event) => {
+            let data: any;
+            try {
+                data = JSON.parse(event.data);
+            } catch(err) {
+                console.error("Unable to parse JSON data from WebSocket");
+                console.error(err);
+                return;
+            }
 
-                if(chart.colors && chart.colors.length > 0) {
-                    for(let i = 0; i < chart.colors.length; i++) {
-                        chart.lineApis[i].applyOptions({ color: chart.colors[i] });
-                    }
-                }
+            console.log(data)
+
+            if(data.type == "postChart") {
+                setChart(data.payload);
+            }
+            if(data.type == "postLines") {
+                setChart(data.payload);
+            }
+
+            if(data.type == "deleteChart") {
+                deleteChart(data.payload.chartId);
+            }
+            if(data.type == "deleteLine") {
+                deleteLine(data.payload.lineId);
             }
         }
-    }, 1000);
+    }
 
-    onDestroy(() => {
-        clearInterval(loop);
+    onMount(async () => {
+        await getCharts();
+        await startWs();
     });
-
 </script>
 
-<div style="display: flex; justify-content: center; margin-top: 5px;">
+<div style="display: flex; justify-content: center; margin-top: 1.5em;">
     <div style="display: flex; flex-direction: column; width: fit-content;">
         <h1 style="margin: 0; padding: 0; text-align: center;">Charter</h1>
-        <p style="margin: 0; padding: 0; text-align: center;">A charting web app</p>
         <span>Made with ❤️ by <a href="https://github.com/stormyhs" target="_blank">stormyhs</a></span>
     </div>
 </div>
@@ -230,13 +281,13 @@
 
 <div style="display: flex; justify-content: center; margin-bottom: 25px;">
     <Container style="display: flex; align-items: center; gap: 15px; width: inherit; width: 70%">
-        <span>API docs <a href="/docs">here</a>.</span>
+        <p>API docs <a href="/docs">here</a>.</p>
 
         <button
-            on:click={clearData}
-            style="margin-left: auto; padding: 10px; border-radius: 8px; background-color: #22242c; color: white; border: none; cursor: pointer;"
+            onclick={clearCharts}
+            style="margin-left: auto; padding: 10px; border-radius: 8px; background-color: #22242c; color: white; border: none; cursor: pointer; font-size: inherit;"
         >
-            Delete all data
+            <p>🗑️ Delete all data</p>
         </button>
     </Container>
 </div>
@@ -244,40 +295,45 @@
 <Grid>
     {#each charts as chart}
         <div style="display: flex; justify-content: center;">
-            <Container title={chart.title} >
+            <Container title={chart.title || "Untitled Chart"} color={chart.color}>
                 <Chart
-                        container={{class: 'chart-container'}}
-                        width={925}
-                        height={400}
-                        ref={(ref) => { chart.api = ref }}
+                    height={400}
+                    width={900}
+                    ref={(r) => {
+                        if(r != null) {
+                            // @ts-ignore shut the fuck up
+                            chart.ref = r;
+                        }
+                    }}
+                    layout={layout}
+                    grid={grid}
                 >
-                    {#if chart.data}
-                        {#each chart.data as series, i}
-                            <LineSeries
-                                data={series}
-                                ref={(ref) => {
-                                    if(ref) { chart.lineApis[i] = ref; }
-                                }} 
-                            />
-                        {/each}
-                    {/if}
+                    {#each getChartLines(chart.id) as line}
+                    <LineSeries
+                        data={[]}
+                        markers={[]}
+                        color={line.color}
+                        ref={(r) => {
+                            if(r != null) {
+                                line.ref = r;
+                            }
+                        }}
+                    />
+                    {/each}
                 </Chart>
-
-                <button
-                    on:click={() => autoScale(chart.id)}
-                    style="padding: 4px; background-color: #22242c; color: white; border: none; cursor: pointer;"
-                >
-                    Fit Scale
+                <button onclick={() => fitToScale(chart.id)} style="border-radius: 8px; background-color: #22242c; color: white; border: none; cursor: pointer; font-size: inherit;">
+                    📏 Fit to scale
                 </button>
-                <button
-                    on:click={() => screenshot(chart.id)}
-                    style="padding: 10px; border-radius: 8px; background-color: #22242c; color: white; border: none; cursor: pointer;"
-                >
-                    As Image
+                <button onclick={() => screenshot(chart.id)} style="border-radius: 8px; background-color: #22242c; color: white; border: none; cursor: pointer; font-size: inherit;">
+                    🔗 Open image
+                </button>
+                <button onclick={() => copyScreenshot(chart.id)} style="border-radius: 8px; background-color: #22242c; color: white; border: none; cursor: pointer; font-size: inherit;">
+                    📋 Copy image
                 </button>
             </Container>
         </div>
     {/each}
+
     {#if charts.length === 0}
         <div style="display: flex; justify-content: center;">
             <Container title="No charts available" >
@@ -287,6 +343,6 @@
     {/if}
 </Grid>
 
-<LoadingBar progress={loadingBar} />
+<!-- <LoadingBar progress={50} /> -->
 
 <div style="height: 35px;"></div>

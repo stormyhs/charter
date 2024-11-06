@@ -17,11 +17,14 @@
 <script lang="ts">
     export let title: string = "";
     export let style: string = "";
+    export let color: string = "white";
 </script>
 
 <div class="container" style={style}>
     {#if title}
-        <h2 style="margin: 0; padding: 8px">{title}</h2>
+        <p style="color: {color}; margin: 0; padding: 8px;">
+            {title.length > 30 ? title.slice(0, 30) + "..." : title}
+        </p>
     {/if}
     <slot></slot>
 </div>
