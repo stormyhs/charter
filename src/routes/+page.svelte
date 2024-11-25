@@ -41,9 +41,13 @@
         for(let chart of charts) {
             let lines = getChartLines(chart.id);
             for(let line of lines) {
-                if(!line.ref) { continue; }
+                if(!line.ref) {
+                    console.log(`Line has no ref`);
+                    continue;
+                }
                 try {
                     line.ref.setData(line.points);
+                    console.log(`Set lines for chart ${chart.id}`);
                 } catch(err) {
                     console.error(err);
                 }
@@ -86,6 +90,7 @@
     function getChartLines(id: number): CopeLine[] {
         let chartLines = [];
         for(let line of lines) {
+            console.log(`${line.chartId}`)
             if(line.chartId === id) {
                 chartLines.push(line);
             }
@@ -94,6 +99,7 @@
             }
         }
 
+        console.log(`Returning ${chartLines.length} lines for chart ${id}`);
         return chartLines;
     }
 
@@ -142,7 +148,7 @@
             line.chartId = chart.id;
             line.id = lineId;
 
-            const lineIndex = lines.findIndex((l: any) => l.id === line.id);
+            const lineIndex = lines.findIndex((l: any) => l.chartId === line.chartId && l.id === line.id);
 
             if (lineIndex === -1) {
                 lines.push(line);
