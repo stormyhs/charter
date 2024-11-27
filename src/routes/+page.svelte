@@ -1,7 +1,7 @@
 <style>
 :global(.chart-container) {
     aspect-ratio: 16 / 9;
-    width: 80%;
+    width: 100%;
     margin: auto;
     background-color: black;
 }

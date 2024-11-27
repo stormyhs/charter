@@ -2,7 +2,7 @@
     .parent {
         margin-left: auto;
         margin-right: auto;
-        max-width: 70vw;
+        max-width: 100vw;
     }
 
     .grid {
