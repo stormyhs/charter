@@ -125,9 +125,28 @@ export const POST: RequestHandler = async ({ request, params }) => {
 
     existingChart.lines[lineId].color = req.color || existingChart.lines[lineId].color;
 
+    let partialLines = []
+    for(let i = 0; i <= lineId; i++) {
+        if(i === lineId) {
+            partialLines.push({points: req.points, markers: req.markers || [], color: req.color})
+        } else {
+            partialLines.push({
+                points: [],
+                markers: []
+            })
+        }
+    }
+
+    let partialChart: Chart = {
+        id: existingChart.id,
+        lines: partialLines,
+        title: req.title || existingChart.title,
+        color: req.color || existingChart.color
+    }
+
     broadcast({
         type: 'postLines',
-        payload: existingChart
+        payload: partialChart
     })
 
     return new Response(null, {status: 200})

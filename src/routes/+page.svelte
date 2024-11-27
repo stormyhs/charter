@@ -13,7 +13,6 @@
 
     import Container from "../components/Container.svelte";
     import Grid from "../components/Grid.svelte";
-    import LoadingBar from "../components/LoadingBar.svelte";
 
     import type { DeepPartial, GridOptions, IChartApi, ISeriesApi, LayoutOptions, SeriesMarker, Time } from "lightweight-charts";
     import type { ChartProps } from "svelte-lightweight-charts";
@@ -45,18 +44,28 @@
                 if(!line.ref) {
                     continue;
                 }
-                try {
-                    line.ref.setData(line.points);
-                } catch(err) {
-                    console.error(err);
+                if(line.points.length !== 0) {
+                    try {
+                        line.ref.setData(line.points);
+                    } catch(err) {
+                        console.error(err);
+                    }
                 }
-                try {
-                    line.ref.setMarkers(line.markers);
-                    line.ref.applyOptions({
-                        color: line.color,
-                    });
-                } catch(err) {
-                    console.error(err);
+                if(line.markers.length !== 0) {
+                    try {
+                        line.ref.setMarkers(line.markers);
+                    } catch(err) {
+                        console.error(err);
+                    }
+                }
+                if(line.color && line.ref.options().color !== line.color) {
+                    try {
+                        line.ref.applyOptions({
+                            color: line.color,
+                        });
+                    } catch(err) {
+                        console.error(err);
+                    }
                 }
             }
         }
@@ -153,6 +162,37 @@
             } else {
                 lines[lineIndex].points = line.points;
                 lines[lineIndex].markers = line.markers;
+                lines[lineIndex].color = line.color;
+            }
+
+            lineId++;
+        }
+        lines = [...lines];
+    }
+
+    // This chart will have partial data, that needs to be appended.
+    async function postChart(chart: any) {
+        const index = charts.findIndex((c: any) => c.id === chart.id);
+
+        if (index === -1) {
+            charts.push(chart);
+        } else {
+            charts[index].title = chart.title;
+            charts[index].color = chart.color;
+        }
+        charts = [...charts];
+
+        let lineId = 0;
+        for(let line of chart.lines) {
+            line.chartId = chart.id;
+            line.id = lineId;
+
+            const lineIndex = lines.findIndex((l: any) => l.chartId === line.chartId && l.id === line.id);
+            if (lineIndex === -1) {
+                lines.push(line);
+            } else {
+                lines[lineIndex].points = [...lines[lineIndex].points, ...line.points]
+                lines[lineIndex].markers = [...lines[lineIndex].markers, ...line.markers]
                 lines[lineIndex].color = line.color;
             }
 
@@ -277,7 +317,8 @@
                 setChart(data.payload);
             }
             if(data.type == "postLines") {
-                setChart(data.payload);
+                // setChart(data.payload);
+                postChart(data.payload);
             }
 
             if(data.type == "deleteChart") {
