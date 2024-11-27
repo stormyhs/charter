@@ -191,8 +191,12 @@
             if (lineIndex === -1) {
                 lines.push(line);
             } else {
-                lines[lineIndex].points = [...lines[lineIndex].points, ...line.points]
-                lines[lineIndex].markers = [...lines[lineIndex].markers, ...line.markers]
+                if(line.points != null && line.points.length !== 0) {
+                    lines[lineIndex].points = [...lines[lineIndex].points, ...line.points]
+                }
+                if(line.markers != null && line.markers.length !== 0) {
+                    lines[lineIndex].markers = [...lines[lineIndex].markers, ...line.markers]
+                }
                 lines[lineIndex].color = line.color;
             }
 
