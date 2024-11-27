@@ -180,6 +180,13 @@
         lines = [...lines];
     }
 
+    async function deleteAllMarkers() {
+        for (let i = 0; i < lines.length; i++) {
+            lines[i].markers = [];
+        }
+        lines = [...lines];
+    }
+
     function fitToScale(index: number) {
         const chart = getChart(index);
         if(!chart) { return }
@@ -270,6 +277,9 @@
             }
             if(data.type == "deleteLine") {
                 deleteLine(data.payload.chartId, data.payload.lineId);
+            }
+            if(data.type == "deleteAllMarkers") {
+                deleteAllMarkers()
             }
         }
     }

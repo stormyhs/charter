@@ -1,6 +1,7 @@
 
 type BroadcastMessageType = 'postChart' |  'deleteChart' | 'deleteAllCharts' |
-							'postLines' | 'putLines' | 'deleteLine'
+							'postLines' | 'putLines' | 'deleteLine' |
+							'deleteAllMarkers'
 							
 
 export interface BroadcastMessage {
