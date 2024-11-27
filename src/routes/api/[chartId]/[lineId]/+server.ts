@@ -294,11 +294,13 @@ export const DELETE: RequestHandler = async ({ request, params}) => {
         return new Response(payload, {status: 404})
     }
 
-    chart.lines.splice(lineId, 1);
+    chart.lines[lineId].points = [];
+    chart.lines[lineId].markers = [];
 
     broadcast({
         type: 'deleteLine',
         payload: {
+            chartId: chartId,
             lineId: lineId
         }
     })

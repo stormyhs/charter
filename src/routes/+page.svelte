@@ -29,6 +29,7 @@
     let charts: UnionChart[] = $state([]);
 
     interface CopeLine {
+        id: number,
         chartId: number,
         points: { time: Time, value: number }[],
         markers: SeriesMarker<Time>[],
@@ -42,12 +43,10 @@
             let lines = getChartLines(chart.id);
             for(let line of lines) {
                 if(!line.ref) {
-                    console.log(`Line has no ref`);
                     continue;
                 }
                 try {
                     line.ref.setData(line.points);
-                    console.log(`Set lines for chart ${chart.id}`);
                 } catch(err) {
                     console.error(err);
                 }
@@ -90,7 +89,6 @@
     function getChartLines(id: number): CopeLine[] {
         let chartLines = [];
         for(let line of lines) {
-            console.log(`${line.chartId}`)
             if(line.chartId === id) {
                 chartLines.push(line);
             }
@@ -99,7 +97,6 @@
             }
         }
 
-        console.log(`Returning ${chartLines.length} lines for chart ${id}`);
         return chartLines;
     }
 
@@ -126,6 +123,7 @@
         await axios.delete("/api/charts")
             .then(() => {
                 charts = [];
+                lines = [];
             })
             .catch((err) => {
                 console.error(err);
@@ -171,8 +169,14 @@
         lines = [...lines];
     }
 
-    async function deleteLine(lineId: number) {
-        lines = lines.filter((line) => line.chartId !== lineId);
+    async function deleteLine(chartId: number, lineId: number) {
+        for (let i = 0; i < lines.length; i++) {
+            let line = lines[i];
+            if(line.chartId == chartId && line.id == lineId) {
+                lines[i].points = [];
+                lines[i].markers = [];
+            }
+        }
         lines = [...lines];
     }
 
@@ -265,7 +269,7 @@
                 deleteChart(data.payload.chartId);
             }
             if(data.type == "deleteLine") {
-                deleteLine(data.payload.lineId);
+                deleteLine(data.payload.chartId, data.payload.lineId);
             }
         }
     }
