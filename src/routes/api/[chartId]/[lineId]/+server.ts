@@ -141,7 +141,6 @@ export const POST: RequestHandler = async ({ request, params }) => {
         id: existingChart.id,
         lines: partialLines,
         title: req.title || existingChart.title,
-        color: req.color || existingChart.color
     }
 
     broadcast({
