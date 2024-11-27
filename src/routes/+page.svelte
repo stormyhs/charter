@@ -273,8 +273,6 @@
                 return;
             }
 
-            console.log(data)
-
             if(data.type == "postChart") {
                 setChart(data.payload);
             }
