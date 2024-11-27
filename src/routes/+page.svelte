@@ -193,6 +193,16 @@
         chart.ref.timeScale().fitContent();
     }
 
+    function fitAllToScale() {
+        for(let chart of charts) {
+            try {
+                chart.ref.timeScale().fitContent();
+            } catch(err) {
+                console.error(err);
+            }
+        }
+    }
+
     async function screenshot(index: number) {
         const chart = getChart(index);
         if(!chart) { return }
@@ -303,12 +313,22 @@
     <Container style="display: flex; align-items: center; gap: 15px; width: inherit; width: 70%">
         <p>API docs <a href="/docs">here</a>.</p>
 
-        <button
-            onclick={clearCharts}
-            style="margin-left: auto; padding: 10px; border-radius: 8px; background-color: #22242c; color: white; border: none; cursor: pointer; font-size: inherit;"
-        >
-            <p>🗑️ Delete all data</p>
-        </button>
+
+        <div style="margin-left: auto;">
+            <button
+                onclick={fitAllToScale}
+                style="padding: 10px; border-radius: 8px; background-color: #22242c; color: white; border: none; cursor: pointer; font-size: inherit;"
+            >
+                <p>📏 Fit all to scale</p>
+            </button>
+
+            <button
+                onclick={clearCharts}
+                style="padding: 10px; border-radius: 8px; background-color: #22242c; color: white; border: none; cursor: pointer; font-size: inherit;"
+            >
+                <p>🗑️ Delete all data</p>
+            </button>
+        </div>
     </Container>
 </div>
 
