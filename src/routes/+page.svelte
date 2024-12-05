@@ -128,15 +128,19 @@
             });
     }
 
-    async function clearCharts() {
+    async function sendClearCharts() {
         await axios.delete("/api/charts")
             .then(() => {
-                charts = [];
-                lines = [];
+                clearCharts();
             })
             .catch((err) => {
                 console.error(err);
             });
+    }
+
+    function clearCharts() {
+        charts = [];
+        lines = [];
     }
 
     async function setChart(chart: any) {
@@ -334,6 +338,9 @@
             if(data.type == "deleteAllMarkers") {
                 deleteAllMarkers()
             }
+            if(data.type == "deleteAllCharts") {
+                clearCharts();
+            }
         }
     }
 
@@ -366,7 +373,7 @@
             </button>
 
             <button
-                onclick={clearCharts}
+                onclick={sendClearCharts}
                 style="padding: 10px; border-radius: 8px; background-color: #22242c; color: white; border: none; cursor: pointer; font-size: inherit;"
             >
                 <p>🗑️ Delete all data</p>
